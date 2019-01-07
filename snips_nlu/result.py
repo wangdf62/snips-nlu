@@ -268,26 +268,22 @@ def is_empty(result):
 
     Example:
 
-        >>> res = empty_result("foo bar")
+        >>> res = empty_result("foo bar", 1.0)
         >>> is_empty(res)
         True
     """
-    return result[RES_INTENT] is None and result[RES_SLOTS] is None
+    return result[RES_INTENT][RES_INTENT_NAME] is None
 
 
-def empty_result(input):  # pylint:disable=redefined-builtin
+def empty_result(input, probability):  # pylint:disable=redefined-builtin
     """Creates an empty parsing result of the same format as the one of
     :func:`parsing_result`
 
     An empty is typically returned by a :class:`.SnipsNLUEngine` or
     :class:`.IntentParser` when no intent nor slots were found.
-
-    Example:
-
-        >>> res = empty_result("foo bar")
-        {'input': 'foo bar', 'intent': None, 'slots': None}
     """
-    return parsing_result(input=input, intent=None, slots=None)
+    intent = intent_classification_result(None, probability)
+    return parsing_result(input=input, intent=intent, slots=[])
 
 
 def _convert_range(rng):
