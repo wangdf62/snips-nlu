@@ -50,7 +50,8 @@ utterances:
 - will it rain tomorrow""")
         dataset = Dataset.from_yaml_files("en", [dataset_stream]).json
         config = LogRegIntentClassifierConfig(random_seed=42)
-        classifier = LogRegIntentClassifier(config).fit(dataset)
+        shared = self.get_shared_data(dataset)
+        classifier = LogRegIntentClassifier(config, **shared).fit(dataset)
         text = "hey how are you doing ?"
 
         # When
@@ -79,7 +80,8 @@ utterances:
 - does it rain
 - will it rain tomorrow""")
         dataset = Dataset.from_yaml_files("en", [dataset_stream]).json
-        classifier = LogRegIntentClassifier().fit(dataset)
+        shared = self.get_shared_data(dataset)
+        classifier = LogRegIntentClassifier(**shared).fit(dataset)
         text = ""
 
         # When
@@ -108,7 +110,8 @@ utterances:
 - can you prepare one cup of coffee""")
         dataset = Dataset.from_yaml_files("en", [dataset_stream]).json
         config = LogRegIntentClassifierConfig(random_seed=42)
-        classifier = LogRegIntentClassifier(config).fit(dataset)
+        shared = self.get_shared_data(dataset)
+        classifier = LogRegIntentClassifier(config, **shared).fit(dataset)
 
         # When
         text1 = "Make me two cups of tea"
@@ -137,7 +140,8 @@ utterances:
     def test_should_get_none_intent_when_empty_dataset(self):
         # Given
         dataset = get_empty_dataset(LANGUAGE_EN)
-        classifier = LogRegIntentClassifier().fit(dataset)
+        shared = self.get_shared_data(dataset)
+        classifier = LogRegIntentClassifier(**shared).fit(dataset)
         text = "this is a dummy query"
 
         # When
@@ -169,7 +173,8 @@ utterances:
   - yili yulu yele""")
         dataset = Dataset.from_yaml_files("en", [dataset_stream]).json
         config = LogRegIntentClassifierConfig(random_seed=42)
-        classifier = LogRegIntentClassifier(config).fit(dataset)
+        shared = self.get_shared_data(dataset)
+        classifier = LogRegIntentClassifier(config, **shared).fit(dataset)
         text = "yala yili yulu"
 
         # When
@@ -184,7 +189,8 @@ utterances:
     def test_should_get_intents_when_empty_dataset(self):
         # Given
         dataset = get_empty_dataset(LANGUAGE_EN)
-        classifier = LogRegIntentClassifier().fit(dataset)
+        shared = self.get_shared_data(dataset)
+        classifier = LogRegIntentClassifier(**shared).fit(dataset)
         text = "this is a dummy query"
 
         # When
@@ -209,7 +215,8 @@ name: intent2
 utterances:
   - lorem ipsum""")
         dataset = Dataset.from_yaml_files("en", [dataset_stream]).json
-        classifier = LogRegIntentClassifier().fit(dataset)
+        shared = self.get_shared_data(dataset)
+        classifier = LogRegIntentClassifier(**shared).fit(dataset)
         text = ""
 
         # When
@@ -242,7 +249,8 @@ name: intent2
 utterances:
   - lorem ipsum""")
         dataset = Dataset.from_yaml_files("en", [dataset_stream]).json
-        intent_classifier = LogRegIntentClassifier().fit(dataset)
+        shared = self.get_shared_data(dataset)
+        intent_classifier = LogRegIntentClassifier(**shared).fit(dataset)
         coeffs = intent_classifier.classifier.coef_.tolist()
         intercept = intent_classifier.classifier.intercept_.tolist()
 
@@ -424,7 +432,8 @@ utterances:
         mocked_build_training.return_value = utterances, labels, intent_list
 
         # When / Then
-        intent_classifier = LogRegIntentClassifier().fit(dataset)
+        shared = self.get_shared_data(dataset)
+        intent_classifier = LogRegIntentClassifier(**shared).fit(dataset)
         intent = intent_classifier.get_intent("no intent there")
         self.assertEqual(None, intent)
 
@@ -443,7 +452,8 @@ name: intent2
 utterances:
   - lorem ipsum""")
         dataset = Dataset.from_yaml_files("en", [dataset_stream]).json
-        intent_classifier = LogRegIntentClassifier().fit(dataset)
+        shared = self.get_shared_data(dataset)
+        intent_classifier = LogRegIntentClassifier(**shared).fit(dataset)
 
         text = "yo"
         utterances = [text_to_utterance(text)]
