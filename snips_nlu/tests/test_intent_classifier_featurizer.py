@@ -4,10 +4,10 @@ from __future__ import unicode_literals
 import json
 
 import numpy as np
-from mock import patch
-from snips_nlu_utils import normalize
 
-from snips_nlu.constants import DATA, ENTITY, LANGUAGE_EN, SLOT_NAME, TEXT
+from snips_nlu.common.utils import json_string
+from snips_nlu.constants import DATA, ENTITY, LANGUAGE_EN, SLOT_NAME, TEXT, \
+    STEMS, WORD_CLUSTERS, STOP_WORDS
 from snips_nlu.dataset import validate_and_format_dataset
 from snips_nlu.entity_parser import CustomEntityParser
 from snips_nlu.entity_parser.custom_entity_parser_usage import \
@@ -16,11 +16,8 @@ from snips_nlu.intent_classifier.featurizer import (
     Featurizer, _get_tfidf_vectorizer)
 from snips_nlu.intent_classifier.log_reg_classifier_utils import (
     text_to_utterance)
-from snips_nlu.languages import get_default_sep
 from snips_nlu.pipeline.configs import FeaturizerConfig
-from snips_nlu.preprocessing import tokenize_light
 from snips_nlu.tests.utils import SnipsTest
-from snips_nlu.common.utils import json_string
 
 
 class TestIntentClassifierFeaturizer(SnipsTest):
@@ -138,39 +135,24 @@ class TestIntentClassifierFeaturizer(SnipsTest):
         self.assertListEqual(featurizer.best_features, best_features)
         self.assertEqual(config, featurizer.config.to_dict())
 
-    @patch("snips_nlu.intent_classifier.featurizer.get_word_cluster")
-    @patch("snips_nlu.intent_classifier.featurizer.stem")
-    @patch("snips_nlu.entity_parser.custom_entity_parser.stem")
-    def test_preprocess_utterances(
-            self, mocked_parser_stem, mocked_featurizer_stem,
-            mocked_word_cluster):
+    def test_preprocess_utterances(self):
         # Given
         language = LANGUAGE_EN
-
-        def _stem(t):
-            t = normalize(t)
-            if t == "beautiful":
-                s = "beauty"
-            elif t == "birdy":
-                s = "bird"
-            elif t == "entity":
-                s = "ent"
-            else:
-                s = t
-            return s
-
-        def stem_function(text, language):
-            return get_default_sep(language).join(
-                [_stem(t) for t in tokenize_light(text, language)])
-
-        mocked_word_cluster.return_value = {
-            "beautiful": "cluster_1",
-            "birdy": "cluster_2",
-            "entity": "cluster_3"
+        resources = {
+            STEMS: {
+                "beautiful": "beauty",
+                "birdy": "bird",
+                "entity": "ent"
+            },
+            WORD_CLUSTERS: {
+                "my_word_clusters": {
+                    "beautiful": "cluster_1",
+                    "birdy": "cluster_2",
+                    "entity": "cluster_3"
+                }
+            },
+            STOP_WORDS: set()
         }
-
-        mocked_parser_stem.side_effect = stem_function
-        mocked_featurizer_stem.side_effect = stem_function
 
         dataset = {
             "intents": {
@@ -241,14 +223,15 @@ class TestIntentClassifierFeaturizer(SnipsTest):
         labels = np.array([0, 0, 1, 1])
 
         custom_entity_parser = CustomEntityParser.build(
-            dataset, CustomEntityParserUsage.WITH_AND_WITHOUT_STEMS)
+            dataset, CustomEntityParserUsage.WITH_AND_WITHOUT_STEMS, resources)
 
         featurizer = Featurizer(
             language,
             None,
             custom_entity_parser=custom_entity_parser,
-            config=FeaturizerConfig(word_clusters_name="brown_clusters",
-                                    use_stemming=True)
+            config=FeaturizerConfig(word_clusters_name="my_word_clusters",
+                                    use_stemming=True),
+            resources=resources
         ).fit(dataset, utterances, labels)
 
         # When

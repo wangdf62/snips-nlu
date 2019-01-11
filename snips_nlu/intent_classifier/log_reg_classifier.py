@@ -65,6 +65,7 @@ class LogRegIntentClassifier(IntentClassifier):
         """
         logger.debug("Fitting LogRegIntentClassifier...")
         dataset = validate_and_format_dataset(dataset)
+        self.load_resources_if_needed(dataset[LANGUAGE])
         self.fit_builtin_entity_parser_if_needed(dataset)
         self.fit_custom_entity_parser_if_needed(dataset)
         language = dataset[LANGUAGE]
@@ -72,7 +73,8 @@ class LogRegIntentClassifier(IntentClassifier):
 
         data_augmentation_config = self.config.data_augmentation_config
         utterances, classes, intent_list = build_training_data(
-            dataset, language, data_augmentation_config, random_state)
+            dataset, language, data_augmentation_config, self.resources,
+            random_state)
 
         self.intent_list = intent_list
         if len(self.intent_list) <= 1:
@@ -83,7 +85,8 @@ class LogRegIntentClassifier(IntentClassifier):
             data_augmentation_config.unknown_words_replacement_string,
             self.config.featurizer_config,
             builtin_entity_parser=self.builtin_entity_parser,
-            custom_entity_parser=self.custom_entity_parser
+            custom_entity_parser=self.custom_entity_parser,
+            resources=self.resources
         )
         self.featurizer = self.featurizer.fit(dataset, utterances, classes)
         if self.featurizer is None:
